@@ -1,6 +1,7 @@
-﻿using DeviceMonitoring.DbContext;
-using MongoDB.Driver;
+﻿using DeviceMonitoring.Context;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DeviceMonitoring.Entities
@@ -9,23 +10,34 @@ namespace DeviceMonitoring.Entities
     {
         public static async Task Seed()
         {
-            var context = new MongoDbContext();
+            using (var context = new SqlDbContext(new DbContextOptions<SqlDbContext>()))
+            {
+                if (!await context.DeviceSettings.Where(x => x.DeviceId == "d1").AnyAsync())
+                {
+                    await context.DeviceSettings.AddAsync(new DeviceSettings { DeviceId = "d1", Onoff = true, CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
+                    await context.SaveChangesAsync();
+                }
+                if (!await context.DeviceSettings.Where(x => x.DeviceId == "d2").AnyAsync())
+                {
+                    await context.DeviceSettings.AddAsync(new DeviceSettings { DeviceId = "d2", Onoff = true, CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
+                    await context.SaveChangesAsync();
+                }
+                if (!await context.DeviceData.Where(x => x.DeviceId == "d1").AnyAsync())
+                {
+                    await context.DeviceData.AddAsync(new DeviceData { DeviceId = "d1", CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
+                    await context.SaveChangesAsync();
+                }
+                if (!await context.DeviceData.Where(x => x.DeviceId == "d2").AnyAsync())
+                {
+                    await context.DeviceData.AddAsync(new DeviceData { DeviceId = "d2", CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
+                    await context.SaveChangesAsync();
+                }
 
-            if (!await context.GetCollection<DeviceSettings>().Find(x => x.DeviceId == "d1").AnyAsync())
-            {
-                await context.GetCollection<DeviceSettings>().InsertOneAsync(new DeviceSettings { DeviceId = "d1", Onoff = true, CreatedDt = DateTime.UtcNow, UpdatedDt = DateTime.UtcNow });
-            }
-            if (!await context.GetCollection<DeviceSettings>().Find(x => x.DeviceId == "d2").AnyAsync())
-            {
-                await context.GetCollection<DeviceSettings>().InsertOneAsync(new DeviceSettings { DeviceId = "d2", Onoff = true, CreatedDt = DateTime.UtcNow, UpdatedDt = DateTime.UtcNow });
-            }
-            if (!await context.GetCollection<DeviceData>().Find(x => x.DeviceId == "d1").AnyAsync())
-            {
-                await context.GetCollection<DeviceData>().InsertOneAsync(new DeviceData { DeviceId = "d1", CreatedDt = DateTime.UtcNow, UpdatedDt = DateTime.UtcNow });
-            }
-            if (!await context.GetCollection<DeviceData>().Find(x => x.DeviceId == "d2").AnyAsync())
-            {
-                await context.GetCollection<DeviceData>().InsertOneAsync(new DeviceData { DeviceId = "d2", CreatedDt = DateTime.UtcNow, UpdatedDt = DateTime.UtcNow });
+                if (!await context.FlowSettings.AnyAsync())
+                {
+                    await context.FlowSettings.AddAsync(new FlowSettings { CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
+                    await context.SaveChangesAsync();
+                }
             }
         }
     }

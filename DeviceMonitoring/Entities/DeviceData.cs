@@ -31,7 +31,5 @@ namespace DeviceMonitoring.Entities
         public double Presspastaci { get; set; }
         [Required]
         public double Pressgorcakic { get; set; }
-        [Required]
-        public double FlowAuto { get; set; }
     }
 }
