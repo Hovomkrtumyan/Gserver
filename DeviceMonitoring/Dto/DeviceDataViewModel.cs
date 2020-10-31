@@ -4,7 +4,7 @@ namespace DeviceMonitoring.Dto
 {
     public class DeviceDataViewModel
     {
-        public string _id { get; set; }
+        public long _id { get; set; }
         public string Id { get; set; }
         public double Flowpast { get; set; }
         public double Flowsarqac { get; set; }

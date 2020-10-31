@@ -4,7 +4,7 @@ namespace DeviceMonitoring.Dto
 {
     public class DeviceSettingsViewModel
     {
-        public string _id { get; set; }
+        public long _id { get; set; }
         public string Id { get; set; }
         public double Flowhanac { get; set; }
         public double Flowmax { get; set; }

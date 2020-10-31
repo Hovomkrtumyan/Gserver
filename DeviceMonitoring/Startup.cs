@@ -1,8 +1,9 @@
-using DeviceMonitoring.DbContext;
-using DeviceMonitoring.ProjectDbContext;
+using DeviceMonitoring.Context;
+using DeviceMonitoring.Helpers;
 using DeviceMonitoring.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,12 +23,12 @@ namespace DeviceMonitoring
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            MongoDbConfig.Database = Configuration["MongoDb:" + nameof(MongoDbConfig.Database)];
-            MongoDbConfig.Host = Configuration["MongoDb:" + nameof(MongoDbConfig.Host)];
-            MongoDbConfig.Port = int.Parse(Configuration["MongoDb:" + nameof(MongoDbConfig.Port)]);
-
             services.AddScoped<IRepository, EntityRepository>();
-            services.AddScoped<IDbContext, MongoDbContext>();
+
+            var conString = Configuration["AppSettings:ConnectionString"];
+            services.AddDbContext<SqlDbContext>(options => options.UseSqlServer(conString));
+            Configuration.GetSection("ConstValues").Get<ConstValues>();
+            ConstValues.ConnectionString = conString;
 
             services.AddCors(options =>
             {

@@ -1,7 +1,7 @@
-﻿using DeviceMonitoring.Entities;
-using DeviceMonitoring.ProjectDbContext;
-using MongoDB.Bson;
-using MongoDB.Driver;
+﻿using DeviceMonitoring.Context;
+using DeviceMonitoring.Entities;
+using DeviceMonitoring.Helpers;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,110 +12,169 @@ namespace DeviceMonitoring.Repositories
 {
     public class EntityRepository : IRepository
     {
-        private readonly IDbContext _dbContext;
+        private readonly SqlDbContext _context;
 
-        public EntityRepository(IDbContext dbContext)
+        public EntityRepository(SqlDbContext context)
         {
-            _dbContext = dbContext;
+            _context = context;
         }
 
-        public IFindFluent<TEntity, TEntity> Filter<TEntity>(Expression<Func<TEntity, bool>> filter) where TEntity : BaseEntity
+        #region Async Read Part
+        public async Task<IEnumerable<T>> GetAllAsync<T>(params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
         {
-            var collection = GetCollection<TEntity>();
-            var cursor = collection.Find(filter);
-            return cursor;
+            var set = _context.Set<T>().AsQueryable();
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, variable) => current.Include(variable));
+            return await set.ToListAsync();
         }
 
-        public async Task<IEnumerable<TEntity>> GetAllAsync<TEntity>() where TEntity : BaseEntity
+        public async Task<IEnumerable<T>> GetAllAsNoTrackingAsync<T>(params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
         {
-            var collection = GetCollection<TEntity>();
-            var entities = await collection.Find(new BsonDocument()).ToListAsync();
+            var set = _context.Set<T>().AsNoTracking();
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, include) => current.Include(include));
+            return await set.ToListAsync();
+        }
+
+        public async Task<T> GetByIdAsync<T>(long id, params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
+        {
+            var set = _context.Set<T>().Where(x => x.Id == id);
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, variable) => current.Include(variable));
+            return await set.FirstOrDefaultAsync();
+        }
+
+        public async Task<T> GetByIdAsNoTrackingAsync<T>(long id, params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
+        {
+            var set = _context.Set<T>().Where(x => x.Id == id).AsNoTracking();
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, variable) => current.Include(variable));
+            return await set.FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<T>> FilterAsNoTrackingAsync<T>(Expression<Func<T, bool>> query, params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
+        {
+            if (query == null)
+                throw new SmartException("Query is null");
+            var set = _context.Set<T>().Where(query).AsNoTracking();
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, variable) => current.Include(variable));
+            return await set.ToListAsync();
+        }
+
+        #endregion
+
+        #region Sync Read Part
+
+        public IQueryable<T> GetAll<T>(params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
+        {
+            var set = _context.Set<T>().AsQueryable();
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, variable) => current.Include(variable));
+            return set;
+        }
+
+        public IQueryable<T> GetAllAsNoTracking<T>(params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
+        {
+            var set = _context.Set<T>().AsNoTracking();
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, variable) => current.Include(variable));
+            return set;
+        }
+
+        public T GetById<T>(long id, params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
+        {
+            var set = _context.Set<T>().Where(entity => entity.Id == id);
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, variable) => current.Include(variable));
+            return set.FirstOrDefault();
+        }
+
+        public T GetByIdAsNoTracking<T>(long id, params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
+        {
+            var set = _context.Set<T>().Where(entity => entity.Id == id).AsNoTracking();
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, variable) => current.Include(variable));
+            return set.FirstOrDefault();
+        }
+
+        public IQueryable<T> Filter<T>(Expression<Func<T, bool>> query, params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
+        {
+            if (query == null)
+                throw new SmartException("Query is null");
+            var set = _context.Set<T>().Where(query);
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, variable) => current.Include(variable));
+            return set;
+        }
+
+        public IQueryable<T> FilterAsNoTracking<T>(Expression<Func<T, bool>> query, params Expression<Func<T, object>>[] includeExpression) where T : BaseEntity
+        {
+            if (query == null)
+                throw new SmartException("Query is null");
+            var set = _context.Set<T>().Where(query).AsNoTracking();
+            if (includeExpression.Any())
+                set = includeExpression.Aggregate(set, (current, variable) => current.Include(variable));
+            return set;
+        }
+        #endregion
+
+        #region CUD Part
+        public async Task<T> Create<T>(T entity) where T : BaseEntity
+        {
+            await _context.Set<T>().AddAsync(entity);
+            return entity;
+        }
+
+        public IList<T> CreateRange<T>(IList<T> entities) where T : BaseEntity
+        {
+            _context.Set<T>().AddRange(entities);
             return entities;
         }
 
-        public async Task<TEntity> Add<TEntity>(TEntity item) where TEntity : BaseEntity
+        public async Task<bool> HardRemove<T>(long id) where T : BaseEntity
         {
-            var collection = GetCollection<TEntity>();
-            item.CreatedDt = DateTime.UtcNow;
-            item.UpdatedDt = DateTime.UtcNow;
-            await collection.InsertOneAsync(item);
-            return item;
-        }
-
-        public async Task<IEnumerable<TEntity>> AddMany<TEntity>(IEnumerable<TEntity> items) where TEntity : BaseEntity
-        {
-            var collection = GetCollection<TEntity>();
-            var addMany = items as TEntity[] ?? items.ToArray();
-
-            foreach (var item in addMany)
+            try
             {
-                item.CreatedDt = DateTime.UtcNow;
-                item.UpdatedDt = DateTime.UtcNow;
+                var entityToRemove = await GetByIdAsync<T>(id);
+                _context.Set<T>().Remove(entityToRemove);
+                return true;
             }
-            await collection.InsertManyAsync(addMany);
-
-            return addMany;
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
-        public async Task<string> DeleteOne<TEntity>(string id) where TEntity : BaseEntity
+        public async Task<bool> HardRemoveRange<T>(IList<long> ids) where T : BaseEntity
         {
-            var filter = new FilterDefinitionBuilder<TEntity>().Eq(EntityConstants.Id, ObjectId.Parse(id));
-            return await DeleteOne(filter) ? id : null;
-        }
-
-        public async Task<IEnumerable<string>> DeleteMany<TEntity>(IEnumerable<string> ids) where TEntity : BaseEntity
-        {
-            var objectIds = ids.Select(id => new ObjectId(id)).ToList();
-            var filter = Builders<TEntity>.Filter.In(EntityConstants.Id, objectIds);
-
-            return await DeleteMany(filter) ? ids : null;
-        }
-
-        public async Task<bool> UpdateOne<TEntity>(string id, UpdateDefinition<TEntity> update) where TEntity : BaseEntity
-        {
-            var filter = Builders<TEntity>.Filter.Eq(EntityConstants.Id, new ObjectId(id));
-            return await UpdateOne(filter, update);
-        }
-
-        public async Task<bool> UpdateOne<TEntity>(FilterDefinition<TEntity> filter, UpdateDefinition<TEntity> update) where TEntity : BaseEntity
-        {
-            var collection = GetCollection<TEntity>();
-            var updateRes = await collection.UpdateOneAsync(filter, update);
-            return updateRes.IsAcknowledged;
-        }
-
-        public async Task<bool> UpdateMany<TEntity>(IEnumerable<string> ids, UpdateDefinition<TEntity> update) where TEntity : BaseEntity
-        {
-            var filter = new FilterDefinitionBuilder<TEntity>().In(EntityConstants.Id, ids);
-            return await UpdateOne(filter, update);
-        }
-
-        public async Task<bool> UpdateMany<TEntity>(FilterDefinition<TEntity> filter, UpdateDefinition<TEntity> update) where TEntity : BaseEntity
-        {
-            var collection = GetCollection<TEntity>();
-            var updateRes = await collection.UpdateManyAsync(filter, update);
-            return true;
-        }
-
-        #region Private
-        private IMongoCollection<TEntity> GetCollection<TEntity>()
-        {
-            return _dbContext.GetCollection<TEntity>();
-        }
-
-        private async Task<bool> DeleteOne<TEntity>(FilterDefinition<TEntity> filter) where TEntity : BaseEntity
-        {
-            var collection = GetCollection<TEntity>();
-            var deleteRes = await collection.DeleteOneAsync(filter);
-            return deleteRes.IsAcknowledged;
-        }
-
-        public async Task<bool> DeleteMany<TEntity>(FilterDefinition<TEntity> filter) where TEntity : BaseEntity
-        {
-            var collection = GetCollection<TEntity>();
-            var deleteRes = await collection.DeleteManyAsync(filter);
-            return deleteRes.IsAcknowledged;
+            try
+            {
+                var entityToRemove = await Filter<T>(x => ids.Contains(x.Id)).ToListAsync();
+                _context.Set<T>().RemoveRange(entityToRemove);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
         #endregion
+
+        public async Task<int> SaveChanges()
+        {
+            return await _context.SaveChangesAsync();
+        }
+
+        public void Dispose()
+        {
+            _context.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        public SqlDbContext GetContext()
+        {
+            return _context;
+        }
     }
 }

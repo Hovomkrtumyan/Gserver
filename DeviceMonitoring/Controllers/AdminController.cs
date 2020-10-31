@@ -2,8 +2,9 @@
 using DeviceMonitoring.Entities;
 using DeviceMonitoring.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DeviceMonitoring.Controllers
@@ -25,56 +26,76 @@ namespace DeviceMonitoring.Controllers
             if (setting == default)
                 return NotFound();
 
-            var update = Builders<DeviceSettings>.Update.Set(x => x.UpdatedDt, DateTime.UtcNow);
+            setting.UpdatedDt = DateTime.Now;
 
             if (model.Flowhanac.HasValue)
-                update = update.Set(x => x.Flowhanac, model.Flowhanac.Value);
+                setting.Flowhanac = model.Flowhanac.Value;
             if (model.Flowmax.HasValue)
-                update = update.Set(x => x.Flowmax, model.Flowmax.Value);
+                setting.Flowmax = model.Flowmax.Value;
             if (model.Flowproc.HasValue)
-                update = update.Set(x => x.Flowproc, model.Flowproc.Value);
+                setting.Flowproc = model.Flowproc.Value;
             if (model.Dpgorcakic.HasValue)
-                update = update.Set(x => x.Dpgorcakic, model.Dpgorcakic.Value);
+                setting.Dpgorcakic = model.Dpgorcakic.Value;
             if (model.Kgorcakic.HasValue)
-                update = update.Set(x => x.Kgorcakic, model.Kgorcakic.Value);
+                setting.Kgorcakic = model.Kgorcakic.Value;
             if (model.Onoff.HasValue)
-                update = update.Set(x => x.Onoff, model.Onoff.Value);
+                setting.Onoff = model.Onoff.Value;
             if (model.Pressgorcakic.HasValue)
-                update = update.Set(x => x.Pressgorcakic, model.Pressgorcakic.Value);
+                setting.Pressgorcakic = model.Pressgorcakic.Value;
             if (model.Restart.HasValue)
-                update = update.Set(x => x.Restart, model.Restart.Value);
+                setting.Restart = model.Restart.Value;
 
-            await _repo.UpdateOne(setting.Id, update);
+            await _repo.SaveChanges();
             return Ok(true);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetData(string id)
         {
-            var datas = await _repo.Filter<DeviceData>(x => x.DeviceId == id).SortByDescending(x => x.UpdatedDt).FirstOrDefaultAsync();
+            var data = await _repo.Filter<DeviceData>(x => x.DeviceId == id).OrderByDescending(x => x.UpdatedDt).FirstOrDefaultAsync();
             DeviceDataViewModel result = null;
-            if (datas != default)
+            if (data != default)
                 result = new DeviceDataViewModel
                 {
-                    _id = datas.Id,
-                    Id = datas.DeviceId,
-                    Dpdrac = datas.Dpdrac,
-                    Dpgorcakic = datas.Dpgorcakic,
-                    Dppastaci = datas.Dppastaci,
-                    Flowpast = datas.Flowpast,
-                    Flowsarqac = datas.Flowsarqac,
-                    Flowhanac = datas.Flowhanac,
-                    Flowmax = datas.Flowmax,
-                    Flowproc = datas.Flowproc,
-                    Kgorcakic = datas.Kgorcakic,
-                    Selfonoff = datas.Selfonoff,
-                    Onoff = datas.Onoff,
-                    Pressgorcakic = datas.Pressgorcakic,
-                    Presspastaci = datas.Presspastaci,
-                    Date = datas.UpdatedDt,
-                    Disconnected = datas.UpdatedDt.AddSeconds(60) <= DateTime.UtcNow
+                    _id = data.Id,
+                    Id = data.DeviceId,
+                    Dpdrac = data.Dpdrac,
+                    Dpgorcakic = data.Dpgorcakic,
+                    Dppastaci = data.Dppastaci,
+                    Flowpast = data.Flowpast,
+                    Flowsarqac = data.Flowsarqac,
+                    Flowhanac = data.Flowhanac,
+                    Flowmax = data.Flowmax,
+                    Flowproc = data.Flowproc,
+                    Kgorcakic = data.Kgorcakic,
+                    Selfonoff = data.Selfonoff,
+                    Onoff = data.Onoff,
+                    Pressgorcakic = data.Pressgorcakic,
+                    Presspastaci = data.Presspastaci,
+                    Date = data.UpdatedDt,
+                    Disconnected = data.UpdatedDt.AddSeconds(60) <= DateTime.Now
                 };
             return Ok(result);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetMonitoringResult(string id)
+        {
+            var data = await _repo.Filter<DeviceData>(x => x.DeviceId == id && x.UpdatedDt.Month == DateTime.Now.Month)
+                .OrderBy(x => x.UpdatedDt).ToListAsync();
+
+            var resultFlowPast = 0d;
+            var resultFlowsarqac = 0d;
+
+            for (var i = 0; i < data.Count; i++)
+            {
+                if (i + 1 == data.Count)
+                    break;
+                var seconds = (data[i + 1].UpdatedDt - data[i].UpdatedDt).Seconds;
+                resultFlowPast += seconds * data[i].Flowpast;
+                resultFlowsarqac += seconds * data[i].Flowsarqac;
+            }
+            return Ok();
         }
     }
 }

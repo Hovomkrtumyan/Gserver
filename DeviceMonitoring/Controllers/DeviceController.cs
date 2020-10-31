@@ -1,10 +1,10 @@
-﻿using System;
-using System.Text.Json;
-using DeviceMonitoring.Dto;
+﻿using DeviceMonitoring.Dto;
 using DeviceMonitoring.Entities;
 using DeviceMonitoring.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DeviceMonitoring.Controllers
@@ -50,8 +50,8 @@ namespace DeviceMonitoring.Controllers
             if (setting == default)
                 return NotFound();
 
-            var update = Builders<DeviceSettings>.Update.Set(nameof(setting.Restart), false);
-            await _repo.UpdateOne(setting.Id, update);
+            setting.Restart = false;
+            await _repo.SaveChanges();
             return Ok();
         }
 
@@ -79,10 +79,11 @@ namespace DeviceMonitoring.Controllers
                 Selfonoff = model.selfonoff,
                 Presspastaci = model.presspastaci,
                 Pressgorcakic = model.pressgorcakic,
-                CreatedDt = DateTime.UtcNow,
-                UpdatedDt = DateTime.UtcNow
+                CreatedDt = DateTime.Now,
+                UpdatedDt = DateTime.Now
             };
-            var deviceDate = await _repo.Add(result);
+            var deviceDate = await _repo.Create(result);
+            await _repo.SaveChanges();
             return Ok(deviceDate.Id);
         }
     }
