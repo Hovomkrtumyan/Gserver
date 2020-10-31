@@ -12,24 +12,14 @@ namespace DeviceMonitoring.Entities
         {
             using (var context = new SqlDbContext(new DbContextOptions<SqlDbContext>()))
             {
-                if (!await context.DeviceSettings.Where(x => x.DeviceId == "d1").AnyAsync())
+                if (!await context.DeviceSettings.Where(x => x.DeviceId == "d3").AnyAsync())
                 {
-                    await context.DeviceSettings.AddAsync(new DeviceSettings { DeviceId = "d1", Onoff = true, CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
+                    await context.DeviceSettings.AddAsync(new DeviceSettings { DeviceId = "d3", Onoff = true, CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
                     await context.SaveChangesAsync();
                 }
-                if (!await context.DeviceSettings.Where(x => x.DeviceId == "d2").AnyAsync())
+                if (!await context.DeviceData.Where(x => x.DeviceId == "d3").AnyAsync())
                 {
-                    await context.DeviceSettings.AddAsync(new DeviceSettings { DeviceId = "d2", Onoff = true, CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
-                    await context.SaveChangesAsync();
-                }
-                if (!await context.DeviceData.Where(x => x.DeviceId == "d1").AnyAsync())
-                {
-                    await context.DeviceData.AddAsync(new DeviceData { DeviceId = "d1", CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
-                    await context.SaveChangesAsync();
-                }
-                if (!await context.DeviceData.Where(x => x.DeviceId == "d2").AnyAsync())
-                {
-                    await context.DeviceData.AddAsync(new DeviceData { DeviceId = "d2", CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
+                    await context.DeviceData.AddAsync(new DeviceData { DeviceId = "d3", CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
                     await context.SaveChangesAsync();
                 }
 
