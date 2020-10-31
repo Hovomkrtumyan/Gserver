@@ -56,13 +56,6 @@ namespace DeviceMonitoring.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetFlowAuto()
-        {
-            var result = await _repo.Filter<DeviceData>(x => x.DeviceId == "d1").SortByDescending(x => x.CreatedDt).FirstOrDefaultAsync();
-            return Ok(new FlowModel { Flowauto = result.FlowAuto });
-        }
-
-        [HttpGet]
         public async Task<IActionResult> SetData(string id, string data)
         {
             var model = JsonSerializer.Deserialize<SetDataModel>(data);
@@ -89,15 +82,8 @@ namespace DeviceMonitoring.Controllers
                 CreatedDt = DateTime.UtcNow,
                 UpdatedDt = DateTime.UtcNow
             };
-            if (id == "d1")
-                result.FlowAuto = model.flowauto;
             var deviceDate = await _repo.Add(result);
             return Ok(deviceDate.Id);
         }
-    }
-
-    public class FlowModel
-    {
-        public double Flowauto { get; set; }
     }
 }

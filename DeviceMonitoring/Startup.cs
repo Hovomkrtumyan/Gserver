@@ -34,7 +34,7 @@ namespace DeviceMonitoring
                 options.AddDefaultPolicy(
                     builder =>
                     {
-                        builder.AllowCredentials().WithOrigins("http://localhost:3000", "http://185.183.182.157:3003", "http://185.183.182.157:3004").AllowAnyHeader().AllowAnyMethod();
+                        builder.AllowCredentials().WithOrigins("http://localhost:3000", "http://185.183.182.157:4001").AllowAnyHeader().AllowAnyMethod();
                     });
             });
             services.AddControllers();

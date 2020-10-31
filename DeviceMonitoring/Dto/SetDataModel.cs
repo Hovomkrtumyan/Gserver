@@ -15,6 +15,5 @@
         public double selfonoff { get; set; }
         public double presspastaci { get; set; }
         public double pressgorcakic { get; set; }
-        public double flowauto { get; set; }
     }
 }
