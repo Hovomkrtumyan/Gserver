@@ -1,0 +1,17 @@
+version: '3.4'
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+
+  devicemonitoring:
+    image: ${DOCKER_REGISTRY-}devicemonitoring
+    restart: always
+    ports:
+      - 80:80
+    build:
+      context: .
+      dockerfile: DeviceMonitoring/Dockerfile
