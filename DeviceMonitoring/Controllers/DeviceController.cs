@@ -4,7 +4,6 @@ using DeviceMonitoring.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 

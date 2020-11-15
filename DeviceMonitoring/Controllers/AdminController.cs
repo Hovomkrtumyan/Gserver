@@ -42,15 +42,6 @@ namespace DeviceMonitoring.Controllers
                 setting.Onoff = model.Onoff.Value;
             if (model.Pressgorcakic.HasValue)
                 setting.Pressgorcakic = model.Pressgorcakic.Value;
-            if (model.FlowAutoOnoff.HasValue)
-            {
-                var flowSettings = await _repo.GetAll<FlowSettings>().FirstOrDefaultAsync();
-                if (flowSettings != default)
-                {
-                    flowSettings.On = model.FlowAutoOnoff.Value;
-                    flowSettings.UpdatedDt = DateTime.Now;
-                }
-            }
 
             await _repo.SaveChanges();
             return Ok(true);

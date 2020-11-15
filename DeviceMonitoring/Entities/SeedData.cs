@@ -22,12 +22,6 @@ namespace DeviceMonitoring.Entities
                     await context.DeviceData.AddAsync(new DeviceData { DeviceId = "d3", CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now });
                     await context.SaveChangesAsync();
                 }
-
-                if (!await context.FlowSettings.AnyAsync())
-                {
-                    await context.FlowSettings.AddAsync(new FlowSettings { CreatedDt = DateTime.Now, UpdatedDt = DateTime.Now, On = true });
-                    await context.SaveChangesAsync();
-                }
             }
         }
     }

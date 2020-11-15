@@ -1,9 +1,9 @@
 ﻿using DeviceMonitoring.Entities;
+using DeviceMonitoring.Helpers;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using DeviceMonitoring.Helpers;
 
 namespace DeviceMonitoring.Context
 {
@@ -15,7 +15,6 @@ namespace DeviceMonitoring.Context
 
         public DbSet<DeviceData> DeviceData { get; set; }
         public DbSet<DeviceSettings> DeviceSettings { get; set; }
-        public DbSet<FlowSettings> FlowSettings { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
