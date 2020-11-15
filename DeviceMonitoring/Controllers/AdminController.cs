@@ -42,8 +42,15 @@ namespace DeviceMonitoring.Controllers
                 setting.Onoff = model.Onoff.Value;
             if (model.Pressgorcakic.HasValue)
                 setting.Pressgorcakic = model.Pressgorcakic.Value;
-            if (model.Restart.HasValue)
-                setting.Restart = model.Restart.Value;
+            if (model.FlowAutoOnoff.HasValue)
+            {
+                var flowSettings = await _repo.GetAll<FlowSettings>().FirstOrDefaultAsync();
+                if (flowSettings != default)
+                {
+                    flowSettings.On = model.FlowAutoOnoff.Value;
+                    flowSettings.UpdatedDt = DateTime.Now;
+                }
+            }
 
             await _repo.SaveChanges();
             return Ok(true);
@@ -81,21 +88,32 @@ namespace DeviceMonitoring.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMonitoringResult(string id)
         {
-            var data = await _repo.Filter<DeviceData>(x => x.DeviceId == id && x.UpdatedDt.Month == DateTime.Now.Month)
-                .OrderBy(x => x.UpdatedDt).ToListAsync();
+            var todayData = await _repo.FilterAsNoTracking<DeviceData>(x => x.DeviceId == id && x.UpdatedDt.Day == DateTime.Now.Day && x.UpdatedDt.Hour >= 11)
+                .OrderBy(x => x.UpdatedDt).Select(x => new { x.UpdatedDt, x.Flowpast, x.Flowsarqac }).ToListAsync();
+            var monthBegin = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1, 11, 00, 00);
+            var monthData = await _repo.Filter<DeviceData>(x => x.DeviceId == id && x.UpdatedDt.Month == DateTime.Now.Month && x.UpdatedDt >= monthBegin)
+                .OrderBy(x => x.UpdatedDt).Select(x => new { x.UpdatedDt, x.Flowpast, x.Flowsarqac }).ToListAsync();
 
-            var resultFlowPast = 0d;
-            var resultFlowsarqac = 0d;
+            var result = new MonitoringModel();
 
-            for (var i = 0; i < data.Count; i++)
+            for (var i = 0; i < todayData.Count; i++)
             {
-                if (i + 1 == data.Count)
+                if (i + 1 == todayData.Count)
                     break;
-                var seconds = (data[i + 1].UpdatedDt - data[i].UpdatedDt).Seconds;
-                resultFlowPast += seconds * data[i].Flowpast;
-                resultFlowsarqac += seconds * data[i].Flowsarqac;
+                var hours = (todayData[i + 1].UpdatedDt - todayData[i].UpdatedDt).TotalHours;
+                result.Orekan1kwpast += hours * todayData[i].Flowpast;
+                result.Orekan1kashx += hours * todayData[i].Flowsarqac;
             }
-            return Ok();
+
+            for (var i = 0; i < monthData.Count; i++)
+            {
+                if (i + 1 == monthData.Count)
+                    break;
+                var hours = (monthData[i + 1].UpdatedDt - monthData[i].UpdatedDt).TotalHours;
+                result.Amsekan1kwpast += hours * monthData[i].Flowpast;
+                result.Amsekan1kwashx += hours * monthData[i].Flowsarqac;
+            }
+            return Ok(result);
         }
     }
 }

@@ -19,8 +19,6 @@ namespace DeviceMonitoring.Entities
         [Required]
         public double Pressgorcakic { get; set; }
         [Required]
-        public bool Restart { get; set; }
-        [Required]
         public bool Onoff { get; set; }
     }
 }

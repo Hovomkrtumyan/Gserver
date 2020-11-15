@@ -6,5 +6,7 @@ namespace DeviceMonitoring.Entities
     {
         [Required]
         public double FlowAuto { get; set; }
+        [Required]
+        public bool On { get; set; }
     }
 }

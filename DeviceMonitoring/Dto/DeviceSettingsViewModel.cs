@@ -12,8 +12,8 @@ namespace DeviceMonitoring.Dto
         public double Dpgorcakic { get; set; }
         public double Kgorcakic { get; set; }
         public double Pressgorcakic { get; set; }
-        public bool Restart { get; set; }
         public bool Onoff { get; set; }
+        public bool FlowAutoOnoff { get; set; }
         public DateTime Date { get; set; }
     }
 }

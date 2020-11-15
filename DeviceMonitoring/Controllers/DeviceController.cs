@@ -4,6 +4,7 @@ using DeviceMonitoring.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -36,23 +37,10 @@ namespace DeviceMonitoring.Controllers
                 Dpgorcakic = setting.Dpgorcakic,
                 Kgorcakic = setting.Kgorcakic,
                 Onoff = setting.Onoff,
-                Pressgorcakic = setting.Pressgorcakic,
-                Restart = setting.Restart
+                Pressgorcakic = setting.Pressgorcakic
             };
 
             return Ok(result);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Restart(string id)
-        {
-            var setting = await _repo.Filter<DeviceSettings>(x => x.DeviceId == id).FirstOrDefaultAsync();
-            if (setting == default)
-                return NotFound();
-
-            setting.Restart = false;
-            await _repo.SaveChanges();
-            return Ok();
         }
 
         [HttpGet]
