@@ -4,6 +4,7 @@ using DeviceMonitoring.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -35,31 +36,19 @@ namespace DeviceMonitoring.Controllers
                 Flowproc = setting.Flowproc,
                 Dpgorcakic = setting.Dpgorcakic,
                 Kgorcakic = setting.Kgorcakic,
+                FlowAutoOnoff = await _repo.FilterAsNoTracking<FlowSettings>(x => true).Select(x => x.On).FirstOrDefaultAsync(),
                 Onoff = setting.Onoff,
-                Pressgorcakic = setting.Pressgorcakic,
-                Restart = setting.Restart
+                Pressgorcakic = setting.Pressgorcakic
             };
 
             return Ok(result);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Restart(string id)
-        {
-            var setting = await _repo.Filter<DeviceSettings>(x => x.DeviceId == id).FirstOrDefaultAsync();
-            if (setting == default)
-                return NotFound();
-
-            setting.Restart = false;
-            await _repo.SaveChanges();
-            return Ok();
         }
 
         [HttpGet]
         public async Task<IActionResult> GetFlowAuto()
         {
             var result = await _repo.GetAll<FlowSettings>().FirstOrDefaultAsync();
-            return Ok(new FlowModel { Flowauto = result.FlowAuto });
+            return Ok(new FlowModel { Flowauto = result.On ? result.FlowAuto : default });
         }
 
         [HttpGet]
