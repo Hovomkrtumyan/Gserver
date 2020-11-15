@@ -113,6 +113,11 @@ namespace DeviceMonitoring.Controllers
                 result.Amsekan1kwpast += hours * monthData[i].Flowpast;
                 result.Amsekan1kwashx += hours * monthData[i].Flowsarqac;
             }
+
+            result.Orekan1kashx = Math.Round(result.Orekan1kashx, 2);
+            result.Orekan1kwpast = Math.Round(result.Orekan1kwpast, 2);
+            result.Amsekan1kwashx = Math.Round(result.Amsekan1kwashx, 2);
+            result.Amsekan1kwpast = Math.Round(result.Amsekan1kwpast, 2);
             return Ok(result);
         }
     }
