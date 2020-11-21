@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using DeviceMonitoring.Helpers;
 
 namespace DeviceMonitoring.Controllers
 {
@@ -66,8 +67,8 @@ namespace DeviceMonitoring.Controllers
                 Selfonoff = model.selfonoff,
                 Presspastaci = model.presspastaci,
                 Pressgorcakic = model.pressgorcakic,
-                CreatedDt = DateTime.Now,
-                UpdatedDt = DateTime.Now
+                CreatedDt = DateTime.UtcNow.ArmenianDateNow(),
+                UpdatedDt = DateTime.UtcNow.ArmenianDateNow()
             };
             var deviceDate = await _repo.Create(result);
             await _repo.SaveChanges();
