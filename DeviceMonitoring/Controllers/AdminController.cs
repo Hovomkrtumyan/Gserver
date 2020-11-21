@@ -1,5 +1,6 @@
 ﻿using DeviceMonitoring.Dto;
 using DeviceMonitoring.Entities;
+using DeviceMonitoring.Helpers;
 using DeviceMonitoring.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +27,7 @@ namespace DeviceMonitoring.Controllers
             if (setting == default)
                 return NotFound();
 
-            setting.UpdatedDt = DateTime.Now;
+            setting.UpdatedDt = DateTime.UtcNow.ArmenianDateNow();
 
             if (model.Flowhanac.HasValue)
                 setting.Flowhanac = model.Flowhanac.Value;
@@ -48,7 +49,7 @@ namespace DeviceMonitoring.Controllers
                 if (flowSettings != default)
                 {
                     flowSettings.On = model.FlowAutoOnoff.Value;
-                    flowSettings.UpdatedDt = DateTime.Now;
+                    flowSettings.UpdatedDt = DateTime.UtcNow.ArmenianDateNow();
                 }
             }
 
@@ -80,7 +81,7 @@ namespace DeviceMonitoring.Controllers
                     Pressgorcakic = data.Pressgorcakic,
                     Presspastaci = data.Presspastaci,
                     Date = data.UpdatedDt,
-                    Disconnected = data.UpdatedDt.AddSeconds(60) <= DateTime.Now
+                    Disconnected = data.UpdatedDt.AddSeconds(60) <= DateTime.UtcNow.ArmenianDateNow()
                 };
             return Ok(result);
         }
@@ -88,10 +89,10 @@ namespace DeviceMonitoring.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMonitoringResult(string id)
         {
-            var todayData = await _repo.FilterAsNoTracking<DeviceData>(x => x.DeviceId == id && x.UpdatedDt.Day == DateTime.Now.Day && x.UpdatedDt.Hour >= 11)
+            var todayData = await _repo.FilterAsNoTracking<DeviceData>(x => x.DeviceId == id && x.UpdatedDt.Day == DateTime.UtcNow.ArmenianDateNow().Day && x.UpdatedDt.Hour >= 11)
                 .OrderBy(x => x.UpdatedDt).Select(x => new { x.UpdatedDt, x.Flowpast, x.Flowsarqac }).ToListAsync();
-            var monthBegin = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1, 11, 00, 00);
-            var monthData = await _repo.Filter<DeviceData>(x => x.DeviceId == id && x.UpdatedDt.Month == DateTime.Now.Month && x.UpdatedDt >= monthBegin)
+            var monthBegin = new DateTime(DateTime.UtcNow.ArmenianDateNow().Year, DateTime.UtcNow.ArmenianDateNow().Month, 1, 11, 00, 00);
+            var monthData = await _repo.Filter<DeviceData>(x => x.DeviceId == id && x.UpdatedDt.Month == DateTime.UtcNow.ArmenianDateNow().Month && x.UpdatedDt >= monthBegin)
                 .OrderBy(x => x.UpdatedDt).Select(x => new { x.UpdatedDt, x.Flowpast, x.Flowsarqac }).ToListAsync();
 
             var result = new MonitoringModel();

@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using DeviceMonitoring.Helpers;
 
 namespace DeviceMonitoring.Controllers
 {
@@ -75,8 +76,8 @@ namespace DeviceMonitoring.Controllers
                 Selfonoff = model.selfonoff,
                 Presspastaci = model.presspastaci,
                 Pressgorcakic = model.pressgorcakic,
-                CreatedDt = DateTime.Now,
-                UpdatedDt = DateTime.Now
+                CreatedDt = DateTime.UtcNow.ArmenianDateNow(),
+                UpdatedDt = DateTime.UtcNow.ArmenianDateNow()
             };
             if (id == "d1")
             {
@@ -84,7 +85,7 @@ namespace DeviceMonitoring.Controllers
                 if (flowSettings != default)
                 {
                     flowSettings.FlowAuto = model.flowauto;
-                    flowSettings.UpdatedDt = DateTime.Now;
+                    flowSettings.UpdatedDt = DateTime.UtcNow.ArmenianDateNow();
                 }
             }
             var deviceDate = await _repo.Create(result);
